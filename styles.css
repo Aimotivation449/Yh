@@ -1,0 +1,672 @@
+/* Global Styles */
+:root {
+    /* Common variables */
+    --transition-speed: 0.3s;
+    --border-radius: 0.375rem;
+}
+
+/* Dark theme is default */
+[data-bs-theme="dark"] {
+    --body-bg: #212529;
+    --body-color: #f8f9fa;
+    --card-bg: #343a40;
+    --card-header-bg: #2c3136;
+    --border-color: #495057;
+    --input-bg: #2b3035;
+    --input-color: #dee2e6;
+    --btn-default-bg: #495057;
+    --btn-default-color: #fff;
+    --sidebar-bg: #343a40;
+    --sidebar-color: #f8f9fa;
+    --table-header-bg: #343a40;
+    --table-stripe-bg: #2c3136;
+    --table-hover-bg: #495057;
+    --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Light theme */
+[data-bs-theme="light"] {
+    --body-bg: #f8f9fa;
+    --body-color: #212529;
+    --card-bg: #ffffff;
+    --card-header-bg: #f1f3fa;
+    --border-color: #dee2e6;
+    --input-bg: #ffffff;
+    --input-color: #212529;
+    --btn-default-bg: #e9ecef;
+    --btn-default-color: #212529;
+    --sidebar-bg: #f8f9fa;
+    --sidebar-color: #212529;
+    --table-header-bg: #f1f3fa;
+    --table-stripe-bg: #f8f9fa;
+    --table-hover-bg: #e9ecef;
+    --shadow-color: rgba(0, 0, 0, 0.05);
+}
+
+body {
+    min-height: 100vh;
+    background-color: var(--body-bg);
+    color: var(--body-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Card styles update */
+.card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    transition: background-color 0.3s ease;
+}
+
+.card-header {
+    background-color: var(--card-header-bg);
+    border-color: var(--border-color);
+}
+
+/* Input styles update */
+.form-control, .form-select {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--input-color);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--input-bg);
+    color: var(--input-color);
+}
+
+/* Light theme form elements */
+[data-bs-theme="light"] .form-control, 
+[data-bs-theme="light"] .form-select {
+    color: #212529;
+    background-color: #ffffff;
+    border-color: #ced4da;
+}
+
+[data-bs-theme="light"] .form-control:focus, 
+[data-bs-theme="light"] .form-select:focus {
+    color: #212529;
+    background-color: #ffffff;
+    border-color: #869f33;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 25, 0.25);
+}
+
+/* Dark theme form elements */
+[data-bs-theme="dark"] .form-control, 
+[data-bs-theme="dark"] .form-select {
+    color: #f8f9fa;
+    background-color: #2b3035;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .form-control:focus, 
+[data-bs-theme="dark"] .form-select:focus {
+    color: #f8f9fa;
+    background-color: #2b3035;
+    border-color: #86b7f3;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 25, 0.25);
+}
+
+/* Table styles update */
+.table {
+    color: var(--body-color) !important;
+    border-color: var(--border-color);
+}
+
+.table thead th {
+    color: var(--body-color) !important;
+    background-color: var(--table-header-bg) !important;
+}
+
+.table tbody td {
+    color: var(--body-color) !important;
+}
+
+/* Ensure consistent text contrast */
+[data-bs-theme="light"] .table,
+[data-bs-theme="light"] .table thead th,
+[data-bs-theme="light"] .table tbody td {
+    color: #212529 !important;
+}
+
+[data-bs-theme="dark"] .table,
+[data-bs-theme="dark"] .table thead th,
+[data-bs-theme="dark"] .table tbody td {
+    color: #f8f9fa !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--table-stripe-bg);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--table-hover-bg);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1050;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--bs-dark-bg-subtle);
+    color: var(--bs-body-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    border: 1px solid var(--border-color);
+    transition: transform var(--transition-speed) ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Sidebar */
+/* Sidebar Styles */
+#sidebar {
+    min-height: 100vh;
+    width: 250px;
+    z-index: 1000;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background-color: var(--sidebar-bg);
+}
+
+/* Removed collapsed state since sidebar should always be visible */
+
+.sidebar-heading {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+#page-content-wrapper {
+    min-width: 0;
+    width: calc(100% - 250px);
+    margin-left: 250px;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* No need for collapsible sidebar anymore */
+
+/* Animation for main content area */
+.main {
+    transition: margin-left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    width: 100%;
+    overflow-x: hidden;
+    padding-left: 0;
+}
+
+body:not(.sidebar-collapsed) .main {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+}
+
+/* Overlay for mobile when sidebar is visible */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Toggle button styling and animation */
+#sidebarToggle, #toggleBtn {
+    opacity: 1 !important;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1060;
+}
+
+#sidebarToggle.active, 
+#toggleBtn.active,
+body.sidebar-collapsed #sidebarToggle, 
+body.sidebar-collapsed #toggleBtn {
+    transform: rotate(180deg);
+}
+
+/* Mobile sidebar - keep sidebar visible but adjust content */
+@media (max-width: 768px) {
+    /* Keep sidebar visible */
+    #sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 200px;
+        z-index: 1050;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Adjust content area to account for sidebar */
+    #page-content-wrapper {
+        margin-left: 200px;
+        width: calc(100% - 200px);
+    }
+}
+
+/* Table styles */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+.table-responsive-xl {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+    max-width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.monthly-data-table table {
+    white-space: nowrap;
+    min-width: 100%;
+}
+
+.monthly-data-table th,
+.monthly-data-table td {
+    min-width: 100px;
+    padding: 0.5rem;
+}
+
+.monthly-data-table th:first-child,
+.monthly-data-table td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: var(--card-bg);
+    z-index: 1;
+}
+
+.table th {
+    position: sticky;
+    top: 0;
+    background-color: var(--card-header-bg);
+    z-index: 1;
+}
+
+/* Light theme specific overrides */
+[data-bs-theme="light"] .monthly-data-table th:first-child,
+[data-bs-theme="light"] .monthly-data-table td:first-child {
+    background-color: #ffffff;
+}
+
+[data-bs-theme="light"] .table th {
+    background-color: #f1f3fa;
+    color: #212529 !important;
+}
+
+/* Dark theme table overrides for sticky headers/columns */
+[data-bs-theme="dark"] .monthly-data-table th:first-child,
+[data-bs-theme="dark"] .monthly-data-table td:first-child {
+    background-color: #343a40;
+    color: #f8f9fa !important;
+}
+
+[data-bs-theme="dark"] .table th {
+    background-color: #2c3136;
+    color: #f8f9fa !important;
+}
+
+.data-row:hover {
+    background-color: var(--table-hover-bg);
+}
+
+/* Print styles */
+@media print {
+    #sidebar, 
+    header, 
+    .no-print,
+    button,
+    .card-header,
+    .sidebar-heading,
+    #toggleBtn,
+    #sidebarToggle {
+        display: none !important;
+    }
+    
+    #wrapper {
+        display: block !important;
+    }
+    
+    #page-content-wrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .container-fluid {
+        padding: 0 !important;
+    }
+    
+    .table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 8pt !important;
+    }
+    
+    .table th, .table td {
+        border: 1px solid #ddd !important;
+        padding: 2px 4px !important;
+    }
+    
+    .monthly-data-table {
+        overflow-x: visible !important;
+        white-space: normal !important;
+    }
+    
+    .monthly-data-table table {
+        white-space: normal !important;
+    }
+    
+    .monthly-data-table th,
+    .monthly-data-table td {
+        min-width: auto !important;
+        max-width: 100px !important;
+        word-break: break-word !important;
+    }
+    
+    body {
+        background-color: white !important;
+        color: black !important;
+        font-size: 10pt !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        margin-bottom: 10px !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .employee-card {
+        page-break-after: always !important;
+    }
+    
+    .card-body {
+        padding: 0 !important;
+    }
+    
+    h5, h6 {
+        font-size: 12pt !important;
+        margin-top: 10px !important;
+        margin-bottom: 5px !important;
+    }
+}
+
+/* Calculation sheet */
+.calculation-results {
+    margin-top: 20px;
+}
+
+.employee-card {
+    margin-bottom: 20px;
+    box-shadow: 0 0.125rem 0.25rem var(--shadow-color);
+    background-color: var(--card-bg) !important;
+    color: var(--body-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+.employee-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.employee-detail {
+    flex: 1 1 200px;
+}
+
+.monthly-data-table {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.tax-summary {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: var(--card-bg);
+    color: var(--body-color) !important;
+    border: 1px solid var(--border-color);
+}
+
+.tax-summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    color: var(--body-color);
+}
+
+.tax-summary-total {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    font-weight: bold;
+    color: var(--body-color);
+}
+
+/* Light theme tax summary */
+[data-bs-theme="light"] .tax-summary {
+    background-color: #ffffff;
+    color: #212529 !important;
+    border-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .tax-summary-item,
+[data-bs-theme="light"] .tax-summary-total {
+    color: #212529;
+}
+
+/* Dark theme tax summary */
+[data-bs-theme="dark"] .tax-summary {
+    background-color: #343a40;
+    color: #f8f9fa !important;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .tax-summary-item,
+[data-bs-theme="dark"] .tax-summary-total {
+    color: #f8f9fa;
+}
+
+.no-data-message {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* Date picker customization */
+.flatpickr-calendar {
+    background-color: var(--card-bg) !important;
+    color: var(--body-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Dark theme date picker */
+[data-bs-theme="dark"] .flatpickr-calendar {
+    box-shadow: 0 3px 13px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-bs-theme="dark"] .flatpickr-day {
+    color: var(--body-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .flatpickr-day.selected {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+[data-bs-theme="dark"] .flatpickr-months .flatpickr-month,
+[data-bs-theme="dark"] .flatpickr-weekdays,
+[data-bs-theme="dark"] .flatpickr-weekday {
+    background-color: var(--card-header-bg) !important;
+    color: var(--body-color) !important;
+    fill: var(--body-color) !important;
+}
+
+/* Light theme date picker */
+[data-bs-theme="light"] .flatpickr-calendar {
+    box-shadow: 0 3px 13px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-bs-theme="light"] .flatpickr-day {
+    color: #333 !important;
+}
+
+[data-bs-theme="light"] .flatpickr-day.selected {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+[data-bs-theme="light"] .flatpickr-months .flatpickr-month,
+[data-bs-theme="light"] .flatpickr-weekdays,
+[data-bs-theme="light"] .flatpickr-weekday {
+    background-color: var(--card-header-bg) !important;
+    color: var(--body-color) !important;
+    fill: var(--body-color) !important;
+}
+
+/* Button styles */
+.btn-edit {
+    color: var(--bs-info);
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.btn-delete {
+    color: var(--bs-danger);
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.btn-edit:hover, .btn-delete:hover {
+    text-decoration: underline;
+}
+
+.btn-link-sm {
+    color: var(--bs-info);
+    background: none;
+    border: none;
+    padding: 0.15rem 0.3rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-link-sm:hover {
+    text-decoration: underline;
+}
+
+/* Light theme buttons */
+[data-bs-theme="light"] .btn-edit {
+    color: #0a58ca; /* Darker blue for better contrast */
+}
+
+[data-bs-theme="light"] .btn-delete {
+    color: #dc3545; /* Bootstrap danger red */
+}
+
+[data-bs-theme="light"] .btn-link-sm {
+    color: #0a58ca; /* Darker blue for better contrast */
+}
+
+/* Dark theme buttons */
+[data-bs-theme="dark"] .btn-edit {
+    color: #0dca9f; /* Bootstrap info blue for dark theme */
+}
+
+[data-bs-theme="dark"] .btn-delete {
+    color: #ff6b6b; /* Brighter red for dark theme */
+}
+
+[data-bs-theme="dark"] .btn-link-sm {
+    color: #0dcaf0;
+}
+
+/* Make sure all links are visible in both themes */
+[data-bs-theme="light"] a {
+    color: #0a58ca; /* Darker blue for better contrast in light mode */
+}
+
+[data-bs-theme="dark"] a {
+    color: #0dcaf0;
+}
+
+/* Light theme sidebar and menu improvements */
+[data-bs-theme="light"] .list-group-item.active {
+    background-color: #435e9c; /* Darker blue background for active menu item */
+    color: #ffffff !important; /* White text for better contrast */
+    border-color: #435e9c;
+}
+
+[data-bs-theme="light"] .list-group-item:hover:not(.active) {
+    background-color: #e9ecef; /* Light gray hover state */
+    color: #212529;
+}
+
+/* Make light theme menu items easier to read */
+[data-bs-theme="light"] .list-group-item {
+    color: #212529;
+}
+
+/* Improve light theme button styles */
+[data-bs-theme="light"] .btn-primary {
+    background-color: #435e9c;
+    border-color: #435e9c;
+}
+
+[data-bs-theme="light"] .btn-primary:hover {
+    background-color: #384f83;
+    border-color: #384f83;
+}
+
+[data-bs-theme="light"] .btn-outline-primary {
+    color: #435e9c;
+    border-color: #435e9c;
+}
+
+[data-bs-theme="light"] .btn-outline-primary:hover {
+    background-color: #435e9c;
+    border-color: #435e9c;
+}

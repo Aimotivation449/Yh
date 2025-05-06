@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Certificates - Income Tax Calculator</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="border-end border-secondary" id="sidebar">
+            <div class="sidebar-heading d-flex justify-content-between align-items-center p-3 border-bottom border-secondary">
+                <span class="fs-5 fw-semibold">Tax Calculator</span>
+                <button class="btn btn-sm btn-outline-secondary d-md-none" id="toggleBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="index.html" class="list-group-item list-group-item-action menu-item" data-page="index.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home me-2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Tax Calculator
+                </a>
+                <a href="calculation_sheet.html" class="list-group-item list-group-item-action menu-item" data-page="calculation_sheet.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text me-2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Calculation Sheet
+                </a>
+                <a href="bill_claims.html" class="list-group-item list-group-item-action menu-item" data-page="bill_claims.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-dollar-sign me-2">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Bill Claims
+                </a>
+                <a href="manual_tax.html" class="list-group-item list-group-item-action menu-item" data-page="manual_tax.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit me-2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Manual Tax Deductions
+                </a>
+                <a href="manual_recoveries.html" class="list-group-item list-group-item-action menu-item" data-page="manual_recoveries.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-minus-circle me-2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Manual Recoveries
+                </a>
+                <a href="tax_certificates.html" class="list-group-item list-group-item-action menu-item active" data-page="tax_certificates.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-award me-2">
+                        <circle cx="12" cy="8" r="7"></circle>
+                        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                    </svg>
+                    Tax Certificates
+                </a>
+                <a href="settings.html" class="list-group-item list-group-item-action menu-item" data-page="settings.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings me-2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Settings
+                </a>
+            </div>
+        </div>
+
+        <!-- Page content -->
+        <div id="page-content-wrapper" class="w-100">
+            <header class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary py-3">
+                <div class="container-fluid">
+                    <button class="btn btn-outline-secondary d-none d-md-block" id="sidebarToggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="navbar-brand mb-0 ms-3">Tax Certificates</h1>
+                    <div class="navbar-collapse">
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                    Help
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">Tax Certificate Guide</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <div class="container-fluid p-4">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Tax Certificates</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Generate tax certificates for employees based on their salary data and tax calculations.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-4">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Generate Individual Certificate</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <form id="certificateForm">
+                                                    <div class="mb-3">
+                                                        <label for="regtNo" class="form-label">Regiment Number</label>
+                                                        <input type="text" class="form-control" id="regtNo" required>
+                                                        <div class="form-text">Enter the regiment number of the employee.</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="fiscalYear" class="form-label">Financial Year</label>
+                                                        <select class="form-select" id="fiscalYear">
+                                                            <!-- Options will be populated in JavaScript -->
+                                                        </select>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">Generate Certificate</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="card mb-4">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Batch Certificate Generation</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <form id="batchCertificateForm">
+                                                    <div class="mb-3">
+                                                        <label for="batchFiscalYear" class="form-label">Financial Year</label>
+                                                        <select class="form-select" id="batchFiscalYear">
+                                                            <!-- Options will be populated in JavaScript -->
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="employeeList" class="form-label">Employees</label>
+                                                        <select class="form-select" id="employeeList" multiple size="5">
+                                                            <!-- Options will be populated in JavaScript -->
+                                                        </select>
+                                                        <div class="form-text">Hold Ctrl/Cmd to select multiple employees. Leave empty to select all.</div>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">Generate Batch Certificates</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Certificate History</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <p>Tax certificates are generated on-demand and not stored in history. Please use the forms above to generate certificates as needed.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">Tax Certificate Guide</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>About Tax Certificates</h6>
+                    <p>Tax certificates provide a summary of an employee's income and tax details for a specific financial year. These can be used for tax filing purposes or as proof of income.</p>
+                    
+                    <h6>Generating Individual Certificates</h6>
+                    <ol>
+                        <li>Enter the regiment number of the employee.</li>
+                        <li>Select the financial year for which you want to generate the certificate.</li>
+                        <li>Click "Generate Certificate" to create the PDF certificate.</li>
+                    </ol>
+                    
+                    <h6>Batch Certificate Generation</h6>
+                    <ol>
+                        <li>Select the financial year for all certificates.</li>
+                        <li>Choose the employees for whom you want to generate certificates. Leave empty to select all employees.</li>
+                        <li>Click "Generate Batch Certificates" to create multiple certificates.</li>
+                    </ol>
+                    
+                    <h6>Certificate Content</h6>
+                    <p>Each certificate includes:</p>
+                    <ul>
+                        <li>Employee details (name, regiment number, designation, etc.)</li>
+                        <li>Income breakdown (basic, allowances, gross income)</li>
+                        <li>Tax calculation details</li>
+                        <li>Bill claims and deductions if available</li>
+                        <li>Digital signature of the authorized person</li>
+                    </ul>
+                    
+                    <div class="alert alert-warning">
+                        <p>Note: Ensure that all salary data is correctly entered in the system before generating certificates to avoid any discrepancies.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Check if libraries loaded properly
+        window.addEventListener('load', function() {
+            // Check if PDF libraries are available
+            if (typeof html2canvas === 'undefined') {
+                console.error('html2canvas library failed to load');
+            }
+            if (typeof jspdf === 'undefined') {
+                console.error('jsPDF library failed to load');
+            }
+        });
+    </script>
+    
+    <!-- Application Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/data_manager.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/direct-sidebar.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/tax_certificate.js"></script>
+    <script>
+        // Initialize when the document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Initialize fiscal year dropdowns
+            const fiscalYearSelect = document.getElementById('fiscalYear');
+            const batchFiscalYearSelect = document.getElementById('batchFiscalYear');
+            
+            // Set default fiscal year from tax parameters
+            const taxParams = DataManager.getTaxParameters();
+            const defaultFiscalYear = taxParams.fiscalYear || '2023-2024';
+            
+            // Create fiscal year options
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear - 3; year <= currentYear; year++) {
+                const fiscalYear = `${year}-${year + 1}`;
+                
+                // Add to individual certificate dropdown
+                const option1 = document.createElement('option');
+                option1.value = fiscalYear;
+                option1.textContent = fiscalYear;
+                fiscalYearSelect.appendChild(option1);
+                
+                // Add to batch certificate dropdown
+                const option2 = document.createElement('option');
+                option2.value = fiscalYear;
+                option2.textContent = fiscalYear;
+                batchFiscalYearSelect.appendChild(option2);
+                
+                // Set default selected fiscal year
+                if (fiscalYear === defaultFiscalYear) {
+                    option1.selected = true;
+                    option2.selected = true;
+                }
+            }
+            
+            // Populate employee list
+            const employeeList = document.getElementById('employeeList');
+            const salaryData = DataManager.loadSalaryData();
+            
+            if (salaryData && Object.keys(salaryData).length > 0) {
+                for (const regtNo in salaryData) {
+                    if (salaryData.hasOwnProperty(regtNo)) {
+                        const employee = salaryData[regtNo][0]; // First month data
+                        const option = document.createElement('option');
+                        option.value = regtNo;
+                        option.textContent = `${regtNo} - ${employee.name || 'Unknown'}`;
+                        employeeList.appendChild(option);
+                    }
+                }
+            } else {
+                // No employees found
+                const option = document.createElement('option');
+                option.disabled = true;
+                option.textContent = 'No employee data available';
+                employeeList.appendChild(option);
+            }
+            
+            // Handle individual certificate form submission
+            const certificateForm = document.getElementById('certificateForm');
+            certificateForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const regtNo = document.getElementById('regtNo').value.trim();
+                const fiscalYear = document.getElementById('fiscalYear').value;
+                
+                if (!regtNo) {
+                    alert('Please enter a regiment number.');
+                    return;
+                }
+                
+                // Check if employee exists
+                if (!salaryData || !salaryData[regtNo]) {
+                    alert('No data found for the specified regiment number.');
+                    return;
+                }
+                
+                // Show loading indicator
+                const submitBtn = certificateForm.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+                
+                try {
+                    // Generate certificate
+                    generateTaxCertificate(regtNo, fiscalYear);
+                } catch (error) {
+                    alert(`Error generating certificate: ${error.message || 'Unknown error'}`);
+                } finally {
+                    // Reset button state
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalBtnText;
+                    }, 1000);
+                }
+            });
+            
+            // Handle batch certificate form submission
+            const batchCertificateForm = document.getElementById('batchCertificateForm');
+            batchCertificateForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const fiscalYear = document.getElementById('batchFiscalYear').value;
+                const selectedEmployees = Array.from(employeeList.selectedOptions).map(option => option.value);
+                
+                // If no employees are selected, use all employees
+                const employees = selectedEmployees.length > 0 ? selectedEmployees : Object.keys(salaryData || {});
+                
+                if (employees.length === 0) {
+                    alert('No employee data available.');
+                    return;
+                }
+                
+                // Confirm batch generation
+                if (confirm(`Generate certificates for ${employees.length} employee(s)?`)) {
+                    // Show loading indicator
+                    const batchBtn = batchCertificateForm.querySelector('button[type="submit"]');
+                    const originalBtnText = batchBtn.textContent;
+                    batchBtn.disabled = true;
+                    batchBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                    
+                    // Process certificates in batch
+                    generateBatchCertificates(employees, fiscalYear)
+                        .then(result => {
+                            // Display results
+                            alert(`Certificate generation complete.\nSuccessful: ${result.successful}\nFailed: ${result.failed}`);
+                        })
+                        .catch(error => {
+                            // Display error
+                            alert(`Error generating certificates: ${error.message}`);
+                        })
+                        .finally(() => {
+                            // Reset button state
+                            batchBtn.disabled = false;
+                            batchBtn.textContent = originalBtnText;
+                        });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

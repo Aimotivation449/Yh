@@ -1,0 +1,822 @@
+/**
+ * Data Manager - Manages all data storage and retrieval operations
+ * Acts as a centralized store for the application
+ * Enhanced with backup history and scheduled backup functionality
+ */
+const DataManager = {
+    /**
+     * Get backup history from localStorage
+     * @returns {Array} Backup history array
+     */
+    getBackupHistory: function() {
+        try {
+            const backupHistory = localStorage.getItem('backupHistory');
+            return backupHistory ? JSON.parse(backupHistory) : [];
+        } catch (error) {
+            console.error('Error loading backup history:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Add a backup to history
+     * @param {string} filename - Backup filename
+     * @param {Object} metadata - Backup metadata including size, date, etc.
+     */
+    addBackupToHistory: function(filename, metadata) {
+        try {
+            const history = this.getBackupHistory();
+            // Limit history to most recent 10 backups
+            if (history.length >= 10) {
+                history.pop(); // Remove oldest backup
+            }
+            
+            // Add new backup at the beginning (most recent first)
+            history.unshift({
+                filename: filename,
+                date: metadata.date || new Date().toISOString(),
+                size: metadata.size || 0,
+                records: metadata.records || {},
+                description: metadata.description || 'Manual backup'
+            });
+            
+            localStorage.setItem('backupHistory', JSON.stringify(history));
+            return true;
+        } catch (error) {
+            console.error('Error adding backup to history:', error);
+            return false;
+        }
+    },
+    
+    /**
+     * Get scheduled backup settings
+     * @returns {Object} Scheduled backup settings
+     */
+    getScheduledBackupSettings: function() {
+        try {
+            const settings = localStorage.getItem('scheduledBackupSettings');
+            return settings ? JSON.parse(settings) : {
+                enabled: false,
+                frequency: 'weekly', // daily, weekly, monthly
+                retention: 5, // number of backups to keep
+                lastBackup: null
+            };
+        } catch (error) {
+            console.error('Error loading scheduled backup settings:', error);
+            return {
+                enabled: false,
+                frequency: 'weekly',
+                retention: 5,
+                lastBackup: null
+            };
+        }
+    },
+    
+    /**
+     * Save scheduled backup settings
+     * @param {Object} settings - Scheduled backup settings
+     */
+    saveScheduledBackupSettings: function(settings) {
+        try {
+            localStorage.setItem('scheduledBackupSettings', JSON.stringify(settings));
+            return true;
+        } catch (error) {
+            console.error('Error saving scheduled backup settings:', error);
+            return false;
+        }
+    },
+    
+    /**
+     * Check if automatic backup is due based on scheduled settings
+     * @returns {boolean} True if backup is due
+     */
+    isAutomaticBackupDue: function() {
+        const settings = this.getScheduledBackupSettings();
+        
+        if (!settings.enabled || !settings.lastBackup) {
+            return settings.enabled; // If enabled but never backed up, return true
+        }
+        
+        const lastBackup = new Date(settings.lastBackup);
+        const now = new Date();
+        const diffDays = Math.floor((now - lastBackup) / (1000 * 60 * 60 * 24));
+        
+        switch (settings.frequency) {
+            case 'daily':
+                return diffDays >= 1;
+            case 'weekly':
+                return diffDays >= 7;
+            case 'monthly':
+                return diffDays >= 30;
+            default:
+                return false;
+        }
+    },
+    
+    /**
+     * Perform automatic backup if due
+     * @returns {boolean} True if backup was performed
+     */
+    performAutomaticBackupIfDue: function() {
+        if (this.isAutomaticBackupDue()) {
+            const exportData = this.exportAllData();
+            if (exportData) {
+                // Calculate statistics for metadata
+                const recordCounts = {
+                    employees: Object.keys(exportData.salaryData || {}).length,
+                    billClaims: (exportData.billClaims || []).length,
+                    taxDeductions: (exportData.taxDeductions || []).length
+                };
+                
+                // Create filename with timestamp
+                const timestamp = new Date().toISOString().replace(/[-:\.T]/g, '').slice(0, 14);
+                const filename = `auto_backup_${timestamp}.json`;
+                
+                // Add to backup history
+                this.addBackupToHistory(filename, {
+                    date: new Date().toISOString(),
+                    size: JSON.stringify(exportData).length,
+                    records: recordCounts,
+                    description: 'Automatic scheduled backup'
+                });
+                
+                // Update last backup timestamp
+                const settings = this.getScheduledBackupSettings();
+                settings.lastBackup = new Date().toISOString();
+                this.saveScheduledBackupSettings(settings);
+                
+                // Save actual backup data in localStorage
+                try {
+                    localStorage.setItem(`backup_${timestamp}`, JSON.stringify(exportData));
+                    
+                    // Clean up old backups if exceeding retention limit
+                    this.cleanupOldBackups();
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error saving automatic backup:', error);
+                    return false;
+                }
+            }
+        }
+        return false;
+    },
+    
+    /**
+     * Clean up old backups based on retention settings
+     */
+    cleanupOldBackups: function() {
+        const settings = this.getScheduledBackupSettings();
+        const history = this.getBackupHistory();
+        
+        if (history.length > settings.retention) {
+            // Remove oldest backups beyond retention limit
+            const toRemove = history.slice(settings.retention);
+            
+            // Remove from localStorage
+            toRemove.forEach(backup => {
+                const key = `backup_${backup.filename.replace(/^auto_backup_(.+)\.json$/, '$1')}`;
+                localStorage.removeItem(key);
+            });
+            
+            // Update history
+            const newHistory = history.slice(0, settings.retention);
+            localStorage.setItem('backupHistory', JSON.stringify(newHistory));
+        }
+    },
+    
+    /**
+     * Verify backup integrity
+     * @param {Object} backupData - The backup data to verify
+     * @returns {Object} Verification results with success status and details
+     */
+    verifyBackupIntegrity: function(backupData) {
+        try {
+            const requiredKeys = ['salaryData', 'billClaims', 'taxDeductions', 'taxParameters', 'organizationDetails'];
+            const missingKeys = [];
+            
+            requiredKeys.forEach(key => {
+                if (!backupData.hasOwnProperty(key)) {
+                    missingKeys.push(key);
+                }
+            });
+            
+            // Check for data structure and values
+            let hasDataErrors = false;
+            const dataErrors = [];
+            
+            // Check salary data
+            if (backupData.salaryData && typeof backupData.salaryData !== 'object') {
+                hasDataErrors = true;
+                dataErrors.push('Salary data is not in correct format');
+            }
+            
+            // Check bill claims and tax deductions (should be arrays)
+            if (backupData.billClaims && !Array.isArray(backupData.billClaims)) {
+                hasDataErrors = true;
+                dataErrors.push('Bill claims data is not in correct format');
+            }
+            
+            if (backupData.taxDeductions && !Array.isArray(backupData.taxDeductions)) {
+                hasDataErrors = true;
+                dataErrors.push('Tax deductions data is not in correct format');
+            }
+            
+            if (backupData.manualRecoveries && !Array.isArray(backupData.manualRecoveries)) {
+                hasDataErrors = true;
+                dataErrors.push('Manual recoveries data is not in correct format');
+            }
+            
+            return {
+                isValid: missingKeys.length === 0 && !hasDataErrors,
+                missingKeys: missingKeys,
+                dataErrors: dataErrors
+            };
+        } catch (error) {
+            console.error('Error verifying backup integrity:', error);
+            return {
+                isValid: false,
+                missingKeys: ['Error verifying backup'],
+                dataErrors: [error.message]
+            };
+        }
+    },
+    /**
+     * Load salary data from localStorage
+     * @returns {Object} Salary data organized by regiment number
+     */
+    loadSalaryData: function() {
+        try {
+            const savedData = localStorage.getItem('salaryData');
+            return savedData ? JSON.parse(savedData) : {};
+        } catch (error) {
+            console.error('Error loading salary data:', error);
+            return {};
+        }
+    },
+
+    /**
+     * Save salary data to localStorage
+     * @param {Object} data - Salary data organized by regiment number
+     */
+    saveSalaryData: function(data) {
+        try {
+            localStorage.setItem('salaryData', JSON.stringify(data));
+        } catch (error) {
+            console.error('Error saving salary data:', error);
+            alert('There was an error saving the salary data. Please try again.');
+        }
+    },
+
+    /**
+     * Load bill claims from localStorage
+     * @returns {Array} Bill claims array
+     */
+    loadBillClaims: function() {
+        try {
+            const savedClaims = localStorage.getItem('billClaims');
+            return savedClaims ? JSON.parse(savedClaims) : [];
+        } catch (error) {
+            console.error('Error loading bill claims:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Save bill claims to localStorage
+     * @param {Array} claims - Bill claims array
+     */
+    saveBillClaims: function(claims) {
+        try {
+            localStorage.setItem('billClaims', JSON.stringify(claims));
+        } catch (error) {
+            console.error('Error saving bill claims:', error);
+            alert('There was an error saving the bill claims. Please try again.');
+        }
+    },
+
+    /**
+     * Load tax deductions from localStorage
+     * @returns {Array} Tax deductions array
+     */
+    loadTaxDeductions: function() {
+        try {
+            const savedDeductions = localStorage.getItem('taxDeductions');
+            return savedDeductions ? JSON.parse(savedDeductions) : [];
+        } catch (error) {
+            console.error('Error loading tax deductions:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Save tax deductions to localStorage
+     * @param {Array} deductions - Tax deductions array
+     */
+    saveTaxDeductions: function(deductions) {
+        try {
+            localStorage.setItem('taxDeductions', JSON.stringify(deductions));
+        } catch (error) {
+            console.error('Error saving tax deductions:', error);
+            alert('There was an error saving the tax deductions. Please try again.');
+        }
+    },
+    
+    /**
+     * Load manual recoveries from localStorage
+     * @returns {Array} Manual recoveries array
+     */
+    loadManualRecoveries: function() {
+        try {
+            const savedRecoveries = localStorage.getItem('manualRecoveries');
+            return savedRecoveries ? JSON.parse(savedRecoveries) : [];
+        } catch (error) {
+            console.error('Error loading manual recoveries:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Save manual recoveries to localStorage
+     * @param {Array} recoveries - Manual recoveries array
+     */
+    saveManualRecoveries: function(recoveries) {
+        try {
+            localStorage.setItem('manualRecoveries', JSON.stringify(recoveries));
+        } catch (error) {
+            console.error('Error saving manual recoveries:', error);
+            alert('There was an error saving the manual recoveries. Please try again.');
+        }
+    },
+
+    /**
+     * Get tax parameters from localStorage
+     * @returns {Object} Tax parameters
+     */
+    getTaxParameters: function() {
+        try {
+            const params = localStorage.getItem('taxParameters');
+            return params ? JSON.parse(params) : {
+                standardDeduction: 75000,
+                educationCess: 4,
+                fiscalYear: '2023-2024',
+                taxSlabs: [
+                    { min: 0, max: 400000, rate: 0 },
+                    { min: 400000, max: 800000, rate: 5 },
+                    { min: 800000, max: 1200000, rate: 10 },
+                    { min: 1200000, max: 1600000, rate: 15 },
+                    { min: 1600000, max: 2000000, rate: 20 },
+                    { min: 2000000, max: 2400000, rate: 25 },
+                    { min: 2400000, max: null, rate: 30 }
+                ],
+                taxRebateLimit: 1200000,
+                maxRebateAmount: 60000
+            };
+        } catch (error) {
+            console.error('Error loading tax parameters:', error);
+            return {
+                standardDeduction: 75000,
+                educationCess: 4,
+                fiscalYear: '2023-2024',
+                taxSlabs: [
+                    { min: 0, max: 400000, rate: 0 },
+                    { min: 400000, max: 800000, rate: 5 },
+                    { min: 800000, max: 1200000, rate: 10 },
+                    { min: 1200000, max: 1600000, rate: 15 },
+                    { min: 1600000, max: 2000000, rate: 20 },
+                    { min: 2000000, max: 2400000, rate: 25 },
+                    { min: 2400000, max: null, rate: 30 }
+                ],
+                taxRebateLimit: 1200000,
+                maxRebateAmount: 60000
+            };
+        }
+    },
+
+    /**
+     * Save tax parameters to localStorage
+     * @param {Object} params - Tax parameters
+     */
+    saveTaxParameters: function(params) {
+        try {
+            localStorage.setItem('taxParameters', JSON.stringify(params));
+        } catch (error) {
+            console.error('Error saving tax parameters:', error);
+            alert('There was an error saving the tax parameters. Please try again.');
+        }
+    },
+
+    /**
+     * Get organization details from localStorage
+     * @returns {Object} Organization details
+     */
+    getOrganizationDetails: function() {
+        try {
+            const details = localStorage.getItem('organizationDetails');
+            return details ? JSON.parse(details) : {
+                name: 'Border Security Force',
+                department: 'Accounts Department',
+                address: '',
+                contactPerson: '',
+                email: ''
+            };
+        } catch (error) {
+            console.error('Error loading organization details:', error);
+            return {
+                name: 'Border Security Force',
+                department: 'Accounts Department',
+                address: '',
+                contactPerson: '',
+                email: ''
+            };
+        }
+    },
+
+    /**
+     * Save organization details to localStorage
+     * @param {Object} details - Organization details
+     */
+    saveOrganizationDetails: function(details) {
+        try {
+            localStorage.setItem('organizationDetails', JSON.stringify(details));
+        } catch (error) {
+            console.error('Error saving organization details:', error);
+            alert('There was an error saving the organization details. Please try again.');
+        }
+    },
+
+    /**
+     * Get retirement date for a specific regiment number
+     * @param {string} regtNo - Regiment number
+     * @returns {string|null} Retirement date in string format or null if not set
+     */
+    getRetirementDate: function(regtNo) {
+        try {
+            return localStorage.getItem(`retirement_${regtNo}`);
+        } catch (error) {
+            console.error(`Error loading retirement date for ${regtNo}:`, error);
+            return null;
+        }
+    },
+
+    /**
+     * Save retirement date for a specific regiment number
+     * @param {string} regtNo - Regiment number
+     * @param {string} date - Retirement date in string format
+     */
+    saveRetirementDate: function(regtNo, date) {
+        try {
+            localStorage.setItem(`retirement_${regtNo}`, date);
+        } catch (error) {
+            console.error(`Error saving retirement date for ${regtNo}:`, error);
+            alert('There was an error saving the retirement date. Please try again.');
+        }
+    },
+
+    /**
+     * Export all application data as a single JSON object
+     * @param {string} description - Optional description for the backup
+     * @returns {Object} All application data with metadata
+     */
+    exportAllData: function(description = '') {
+        try {
+            const salaryData = this.loadSalaryData();
+            const billClaims = this.loadBillClaims();
+            const taxDeductions = this.loadTaxDeductions();
+            const manualRecoveries = this.loadManualRecoveries();
+            const taxParameters = this.getTaxParameters();
+            const organizationDetails = this.getOrganizationDetails();
+            const retirementDates = this.getAllRetirementDates();
+            
+            // Generate metadata
+            const timestamp = new Date().toISOString();
+            const recordCounts = {
+                employees: Object.keys(salaryData).length,
+                billClaims: billClaims.length,
+                taxDeductions: taxDeductions.length,
+                manualRecoveries: manualRecoveries.length
+            };
+            
+            const exportData = {
+                metadata: {
+                    version: "1.0",
+                    createdAt: timestamp,
+                    description: description || 'Manual export',
+                    recordCounts: recordCounts,
+                    fiscalYear: taxParameters.fiscalYear || '2023-2024',
+                    organization: organizationDetails.name || 'Border Security Force'
+                },
+                salaryData: salaryData,
+                billClaims: billClaims,
+                taxDeductions: taxDeductions,
+                manualRecoveries: manualRecoveries,
+                taxParameters: taxParameters,
+                organizationDetails: organizationDetails,
+                retirementDates: retirementDates
+            };
+            
+            return exportData;
+        } catch (error) {
+            console.error('Error exporting data:', error);
+            alert('There was an error exporting the data. Please try again.');
+            return null;
+        }
+    },
+
+    /**
+     * Import all application data from a JSON object
+     * @param {Object} data - All application data
+     * @returns {Object} Object with success status and import info
+     */
+    importAllData: function(data) {
+        try {
+            // First verify the integrity of the backup
+            const verificationResult = this.verifyBackupIntegrity(data);
+            
+            if (!verificationResult.isValid) {
+                return {
+                    success: false,
+                    message: 'Backup data validation failed',
+                    details: {
+                        missingKeys: verificationResult.missingKeys,
+                        dataErrors: verificationResult.dataErrors
+                    }
+                };
+            }
+            
+            // Import the data
+            if (data.salaryData) this.saveSalaryData(data.salaryData);
+            if (data.billClaims) this.saveBillClaims(data.billClaims);
+            if (data.taxDeductions) this.saveTaxDeductions(data.taxDeductions);
+            if (data.manualRecoveries) this.saveManualRecoveries(data.manualRecoveries);
+            if (data.taxParameters) this.saveTaxParameters(data.taxParameters);
+            if (data.organizationDetails) this.saveOrganizationDetails(data.organizationDetails);
+            if (data.retirementDates) this.importRetirementDates(data.retirementDates);
+            
+            // Create a backup entry in history if we have metadata
+            if (data.metadata) {
+                const filename = `import_${new Date().toISOString().replace(/[-:\.T]/g, '').slice(0, 14)}.json`;
+                this.addBackupToHistory(filename, {
+                    date: data.metadata.createdAt || new Date().toISOString(),
+                    size: JSON.stringify(data).length,
+                    records: data.metadata.recordCounts || {
+                        employees: Object.keys(data.salaryData || {}).length,
+                        billClaims: (data.billClaims || []).length,
+                        taxDeductions: (data.taxDeductions || []).length,
+                        manualRecoveries: (data.manualRecoveries || []).length
+                    },
+                    description: `Imported: ${data.metadata.description || 'No description'}`
+                });
+            }
+            
+            return {
+                success: true,
+                message: 'Data imported successfully',
+                details: {
+                    metadata: data.metadata || {
+                        createdAt: 'Unknown',
+                        description: 'Unknown',
+                        organization: 'Unknown'
+                    }
+                }
+            };
+        } catch (error) {
+            console.error('Error importing data:', error);
+            return {
+                success: false,
+                message: `Error importing data: ${error.message}`,
+                details: {
+                    error: error.message
+                }
+            };
+        }
+    },
+
+    /**
+     * Get all retirement dates from localStorage
+     * @returns {Object} All retirement dates by regiment number
+     */
+    getAllRetirementDates: function() {
+        try {
+            const retirementDates = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('retirement_')) {
+                    const regtNo = key.substring(11); // After 'retirement_'
+                    retirementDates[regtNo] = localStorage.getItem(key);
+                }
+            }
+            return retirementDates;
+        } catch (error) {
+            console.error('Error getting all retirement dates:', error);
+            return {};
+        }
+    },
+
+    /**
+     * Import retirement dates from an object
+     * @param {Object} dates - Retirement dates by regiment number
+     */
+    importRetirementDates: function(dates) {
+        try {
+            for (const regtNo in dates) {
+                this.saveRetirementDate(regtNo, dates[regtNo]);
+            }
+        } catch (error) {
+            console.error('Error importing retirement dates:', error);
+        }
+    },
+
+    /**
+     * Clear all application data from localStorage
+     * @returns {boolean} Success status
+     */
+    clearAllData: function() {
+        try {
+            localStorage.removeItem('salaryData');
+            localStorage.removeItem('billClaims');
+            localStorage.removeItem('taxDeductions');
+            localStorage.removeItem('manualRecoveries');
+            localStorage.removeItem('taxParameters');
+            localStorage.removeItem('organizationDetails');
+            
+            // Clear retirement dates
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('retirement_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            // Clear tax summary cache
+            localStorage.removeItem('tax_calculation_summary');
+            
+            return true;
+        } catch (error) {
+            console.error('Error clearing data:', error);
+            alert('There was an error clearing the data. Please try again.');
+            return false;
+        }
+    },
+    
+    /**
+     * Get tax calculation summary for all employees
+     * This retrieves tax data calculated in the calculation sheet
+     * @returns {Object} Tax summary data by regiment number
+     */
+    getTaxSummary: function() {
+        try {
+            // First try to load cached data
+            const cachedSummary = localStorage.getItem('tax_calculation_summary');
+            if (cachedSummary) {
+                return JSON.parse(cachedSummary);
+            }
+            
+            // If no cached data, calculate the tax summary
+            const taxSummary = {};
+            const salaryData = this.loadSalaryData();
+            const billClaims = this.loadBillClaims();
+            const manualRecoveries = this.loadManualRecoveries();
+            const taxDeductions = this.loadTaxDeductions();
+            const taxParams = this.getTaxParameters();
+            const allRetirementDates = this.getAllRetirementDates();
+            
+            // Get the standard values from tax parameters
+            const standardDeduction = taxParams.standardDeduction || 75000;
+            const educationCessRate = taxParams.educationCess || 4;
+            
+            // Calculate tax summary for each employee
+            for (const regtNo in salaryData) {
+                const employee = salaryData[regtNo];
+                if (!employee || employee.length === 0) continue;
+                
+                // Get retirement date for this employee
+                const retirementDate = allRetirementDates[regtNo];
+                
+                // Calculate extended data (12 months or until retirement)
+                // This reproduces the calculation from calculation_sheet_script.js
+                const extendedData = window.extendTo12Months ? 
+                    window.extendTo12Months(employee, retirementDate) : 
+                    employee;
+                
+                const monthsCount = extendedData.length;
+                const firstMonth = employee[0].details;
+                
+                // Calculate totals from extended data
+                const annualSalary = extendedData.reduce(
+                    (sum, entry) => sum + (entry.details.total || 0), 
+                    0
+                );
+                
+                // Calculate CSV recovery from salary data
+                const csvRecovery = extendedData.reduce(
+                    (sum, entry) => sum + (entry.details.recovery || 0), 
+                    0
+                );
+                
+                // Calculate the sum of tax column from CSV data
+                const csvFileTax = extendedData.reduce(
+                    (sum, entry) => sum + (entry.details.tax || 0), 
+                    0
+                );
+                
+                // Get additional taxable income from bill claims
+                const employeeBillClaims = billClaims.filter(claim => claim.regtNo === regtNo);
+                const additionalIncome = employeeBillClaims
+                    .filter(claim => claim.billType !== 'Recovery' && claim.billType !== 'Tax Deduction' && claim.taxable)
+                    .reduce((sum, claim) => sum + (claim.amount || 0), 0);
+                
+                // Get manual recoveries
+                const employeeManualRecoveries = manualRecoveries.filter(recovery => recovery.regtNo === regtNo);
+                const manualRecoveriesAmount = employeeManualRecoveries.reduce(
+                    (sum, recovery) => sum + (parseFloat(recovery.amount) || 0), 
+                    0
+                );
+                
+                // Get legacy recoveries from bill claims (for backward compatibility)
+                const legacyRecoveries = employeeBillClaims
+                    .filter(claim => claim.billType === 'Recovery')
+                    .reduce((sum, claim) => sum + (claim.amount || 0), 0);
+                
+                // Total manual recoveries
+                const totalManualRecoveries = manualRecoveriesAmount + legacyRecoveries;
+                
+                // Total recoveries
+                const totalRecoveries = csvRecovery + totalManualRecoveries;
+                
+                // Get manual tax deductions
+                const employeeTaxDeductions = taxDeductions.filter(deduction => deduction.regtNo === regtNo);
+                const manualTaxDeductions = employeeTaxDeductions.reduce(
+                    (sum, deduction) => sum + (parseFloat(deduction.amount) || 0), 
+                    0
+                );
+                
+                // Calculate taxable income
+                const taxableIncome = Math.max(0, annualSalary + additionalIncome - totalRecoveries - standardDeduction);
+                
+                // Calculate tax
+                const tax = window.calculateTax ? window.calculateTax(taxableIncome) : 0;
+                const marginalRelief = window.calculateMarginalRelief ? 
+                    window.calculateMarginalRelief(taxableIncome, tax) : 
+                    0;
+                const netTax = Math.max(0, tax - marginalRelief);
+                const educationCess = Math.round(netTax * (educationCessRate / 100));
+                
+                // Total tax after deductions
+                const totalTax = Math.max(0, netTax + educationCess - manualTaxDeductions - csvFileTax);
+                
+                // Monthly deduction
+                const monthlyDeduction = monthsCount > 0 ? Math.round(totalTax / monthsCount) : 0;
+                
+                // Store tax summary
+                taxSummary[regtNo] = {
+                    name: firstMonth.name,
+                    rank: firstMonth.rank,
+                    pan: firstMonth.pan,
+                    annualSalary,
+                    standardDeduction,
+                    additionalIncome,
+                    csvRecovery,
+                    manualRecoveries: totalManualRecoveries,
+                    totalRecoveries,
+                    taxableIncome,
+                    tax,
+                    marginalRelief,
+                    netTax,
+                    educationCess,
+                    educationCessRate,
+                    manualTaxDeductions,
+                    csvFileTax,
+                    totalTax,
+                    monthlyDeduction,
+                    monthsCount
+                };
+            }
+            
+            // Cache the results
+            localStorage.setItem('tax_calculation_summary', JSON.stringify(taxSummary));
+            
+            return taxSummary;
+        } catch (error) {
+            console.error('Error calculating tax summary:', error);
+            return {};
+        }
+    },
+    
+    /**
+     * Clear tax summary cache
+     * This should be called whenever data that affects tax calculation changes
+     */
+    clearTaxSummaryCache: function() {
+        try {
+            localStorage.removeItem('tax_calculation_summary');
+            return true;
+        } catch (error) {
+            console.error('Error clearing tax summary cache:', error);
+            return false;
+        }
+    }
+};
